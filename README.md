@@ -64,6 +64,7 @@ sudo apt-get install -y screen
 # docker
 sudo wget https://downloads.hypriot.com/docker-hypriot_1.10.3-1_armhf.deb
 sudo dpkg -i docker-hypriot_1.10.3-1_armhf.deb
+#sudo service docker start
 #sudo docker run armhf/debian /bin/echo 'Hello World'
 
 # don't need this, just for troubleshooting...
