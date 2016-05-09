@@ -47,7 +47,7 @@ class PubChannel:
 
 class SubChannel:
     """
-    Only the actor uses this class.
+    Use a message technology to subscribe to events.
     """
 
     def __init__(self, address, channels):
