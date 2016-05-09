@@ -99,7 +99,7 @@ def loop( chips ):
     # look for events, share them out
     while True:
 
-        # Apparently I need to levels of try...
+        # Apparently I need two levels of "try"...
         # https://www.raspberrypi.org/forums/viewtopic.php?f=91&t=114581I
         try:
 
