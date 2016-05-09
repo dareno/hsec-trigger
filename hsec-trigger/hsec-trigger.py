@@ -59,7 +59,12 @@ def setup():
 
     # setup interrupt callback function
     GPIO.setmode(GPIO.BOARD)
+
+    # using "GPIO 5", pin 29 for IntA
     GPIO.setup(29,GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
+
+    # using "GPIO 6", pin 31 for IntA
+    GPIO.setup(31,GPIO.IN,pull_up_down=GPIO.PUD_DOWN)
 
     return chips
 
@@ -112,6 +117,8 @@ def loop( chips ):
     
             # block until there's another event or timeout occurs
             try:
+		# will need to update this for IntB when we have enough sensors
+		# and want it to be efficient
                 channel = GPIO.wait_for_edge(29, GPIO.RISING, timeout=1)
             except (KeyboardInterrupt, RuntimeError) as e:
                 clean_exit()

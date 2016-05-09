@@ -21,6 +21,8 @@ class Bus:
         self.bus[1][0].portA.pins[2].set_description("Family Room PIR").set_enable(True)
 
     def return_bus(self):
+        # find myself wondering why I did this...
+        # looks like a defect in that I'm returning a new Bus object instead of self...
         return Bus()
 
     def get_bus_devices(self):
