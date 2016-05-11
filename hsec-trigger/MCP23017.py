@@ -62,14 +62,15 @@ class Port:
     register addresses.
     """
 
-    def __init__(self, bus, address, name, register_mapping, pullup_map):
+    #def __init__(self, bus, address, name, register_mapping, pullup_map):
+    def __init__(self, bus, address, name, register_mapping):
         self.MAXPINS = 8
         self.BUS=bus
         self.DEVICE_ADDRESS=address
         self.name=name
         self.pins = []
         self.REGISTER = register_mapping
-        self.PULLUP_MAP = pullup_map # some are done in hardware
+        #self.PULLUP_MAP = pullup_map # some are done in hardware (now all)
         self.status_byte = None
         self.pin_state = None
 
@@ -115,7 +116,8 @@ class Port:
         self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['IOCON'], 0x42)
 
         # Activate internal pullup resistors for floating pins (designated in map)
-        self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['GPPU'], self.PULLUP_MAP)
+# no floating pins anymore, HW has resistors
+#        self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['GPPU'], self.PULLUP_MAP)
 
 
     def print_name(self):
@@ -220,11 +222,13 @@ class MCP23017:
               }
         }
 
-        # setup port A, 0xFC means that the first two ports have HW pull up reistors
-        self.portA = Port(self.bus, self.address, "GPA", self.REGISTER_MAPPING['A'], 0xFC)
+        # setup port A, 0xFC means that the first two ports have HW pull up resistors
+        #self.portA = Port(self.bus, self.address, "GPA", self.REGISTER_MAPPING['A'], 0xFC)
+        self.portA = Port(self.bus, self.address, "GPA", self.REGISTER_MAPPING['A'])
 
-        # setup port B, 0xFF means that none of the ports have HW pull up reistors
-        self.portB = Port(self.bus, self.address, "GPB", self.REGISTER_MAPPING['B'], 0xFF)
+        # setup port B, 0xFF means that none of the ports have HW pull up resistors
+        #self.portB = Port(self.bus, self.address, "GPB", self.REGISTER_MAPPING['B'], 0xFF)
+        self.portB = Port(self.bus, self.address, "GPB", self.REGISTER_MAPPING['B'])
 
     def print_self(self):
         print ("chip 0x%s:" % format(self.address,'02x'))

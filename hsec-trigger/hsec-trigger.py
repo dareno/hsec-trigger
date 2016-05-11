@@ -112,7 +112,7 @@ def loop( chips ):
     
             # share events with those interested
             if len(events)>0:
-                channel = "events"
+                channel = "sensor_events"
                 comm_channel.send(channel, events)
     
             # block until there's another event or timeout occurs

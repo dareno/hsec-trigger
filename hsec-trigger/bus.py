@@ -7,8 +7,8 @@ from MCP23017 import MCP23017
 class Bus:
     def __init__(self):
         self.bus=[]
-        self.bus.append([])    # bus 0 isn't used here
-        self.bus.append([])    # we'll use bus1 on RPi 2
+        self.bus.append([])    # create bus 0, not used
+        self.bus.append([])    # create bus 1; we'll use bus1 on RPi 2
 
         self.bus[1].append(MCP23017(1,0x20)) # add device b'000'
 
@@ -18,7 +18,7 @@ class Bus:
         self.bus[1][0].portA.pins[5].set_description("Laundry Door").set_enable(True)
         self.bus[1][0].portA.pins[4].set_description("Family Room Door").set_enable(True)
         self.bus[1][0].portA.pins[3].set_description("Kitchen Door").set_enable(True)
-        self.bus[1][0].portA.pins[2].set_description("Family Room PIR").set_enable(True)
+        #self.bus[1][0].portA.pins[2].set_description("Family Room PIR").set_enable(True)
 
     def return_bus(self):
         # find myself wondering why I did this...
