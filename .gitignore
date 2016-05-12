@@ -1,4 +1,9 @@
+<<<<<<< HEAD
 __pycache__
 *.log
 hsec-trigger/comms
 hsec-trigger/comms/*
+=======
+
+__pycache__
+>>>>>>> e628e262a28d64af70f2a28803da49e015819140

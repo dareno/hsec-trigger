@@ -12,14 +12,6 @@ class Bus:
 
         self.bus[1].append(MCP23017(1,0x20)) # add device b'000'
 
-        # configure the pins
-        self.bus[1][0].portA.pins[7].set_description("Garage Door").set_enable(True)
-        self.bus[1][0].portA.pins[6].set_description("Front Door").set_enable(True)
-        self.bus[1][0].portA.pins[5].set_description("Laundry Door").set_enable(True)
-        self.bus[1][0].portA.pins[4].set_description("Family Room Door").set_enable(True)
-        self.bus[1][0].portA.pins[3].set_description("Kitchen Door").set_enable(True)
-        #self.bus[1][0].portA.pins[2].set_description("Family Room PIR").set_enable(True)
-
     def return_bus(self):
         # find myself wondering why I did this...
         # looks like a defect in that I'm returning a new Bus object instead of self...

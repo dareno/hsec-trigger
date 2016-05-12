@@ -241,7 +241,7 @@ class MCP23017:
         event is a list of [<pin name>,<closed state>]
         """
         events = []
-        events = self.portA.get_events("GPA") + self.portB.get_events("GPB")
+        events = self.portA.get_events("MCP0:GPA") + self.portB.get_events("MCP0:GPB")
 
         return events
 
