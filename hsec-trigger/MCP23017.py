@@ -16,43 +16,6 @@ import time
 
 log = logging.getLogger('hsec')
 
-class Pin:
-    
-    def __init__(self, name, description=None):
-        """
-        To be initialized by a port which will know it's own name. Something like:
-            <from port>
-            self.pin( "GPA0", "Front Door")
-            Refactor: Pins are not only for reed sensors. Take closed out of here and make it 
-            a child class.
-        """
-        self.name = name
-        self.description = description
-        if self.description is None:
-            self.enabled = False
-        else:
-            self.enabled = True
-        self.closed = None # default to unknown state to ensure event creation 
-
-    def print_self(self):
-        if self.closed:
-            print("%s:%s:%s:Closed" % (self.name, self.description, self.enabled))
-        elif self.closed is None:
-            print("%s:%s:%s:<unknown>" % (self.name, self.description, self.enabled))
-        else :
-            print("%s:%s:%s:Open" % (self.name, self.description, self.enabled))
-
-    def set_enable(self,enable):
-        self.enabled=enable
-        return self
-
-    def set_closed(self,closed_value):
-        self.closed=closed_value
-        return self
-
-    def set_description(self,description):
-        self.description = description
-        return self
 
 class Port:
     """
@@ -62,15 +25,11 @@ class Port:
     register addresses.
     """
 
-    #def __init__(self, bus, address, name, register_mapping, pullup_map):
     def __init__(self, bus, address, name, register_mapping):
-        self.MAXPINS = 8
         self.BUS=bus
         self.DEVICE_ADDRESS=address
         self.name=name
-        self.pins = []
         self.REGISTER = register_mapping
-        #self.PULLUP_MAP = pullup_map # some are done in hardware (now all)
         self.status_byte = None
         self.pin_state = None
 
@@ -97,12 +56,6 @@ class Port:
         #        I'm not using this, just checking each GP value. Could use this if 
         #        I wanted to be more clever.
 
-
-        # create 8 pins which will be defined from main
-        for x in range(0,self.MAXPINS):
-            pin_name = self.name+str(x)
-            self.pins.append(Pin(pin_name))
-
         # setup the pins for reading/input
         self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['IODIR'], 0xFF) # 
 
@@ -114,14 +67,6 @@ class Port:
 
         # Connect Interrupt-Pin with the other port (MIRROR)
         self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['IOCON'], 0x42)
-
-        # Activate internal pullup resistors for floating pins (designated in map)
-# no floating pins anymore, HW has resistors
-#        self.BUS.write_byte_data(self.DEVICE_ADDRESS, self.REGISTER['GPPU'], self.PULLUP_MAP)
-
-
-    def print_name(self):
-        print ("port %s:" % self.name)
 
     def xor(self, x, y):
         """
@@ -135,50 +80,53 @@ class Port:
         """
         Return a list of new events that occurred. Format is [event,...]
         event is a list of [(<pin name>,<closed state>),...]
+
+        An MCP port has 8 pins. Put the pin and closed state in the list if changed.
         """
 
-        # Read GPIO-Byte from the register for this port, save locally
-        # this line will reset the interrupt
-        #time.sleep(0.25) # give it a 1/4 sec to stop bouncing...
-        register = self.BUS.read_byte_data(self.DEVICE_ADDRESS, self.REGISTER['GPIO'])
-        old_pin_state = self.pin_state # None the first time
-        self.pin_state = register 
-        log.debug ("Port.get_events() new pin state: %s" % (format(register, '08b')))
+        # save the last polled pin register state for comparison
+        old_pin_state = 0   # want this to be int type instead of NoneType
+        old_pin_state = self.pin_state # 'None' the first time
 
-        # for each pin, see if it's closed or open and save state 
-        #OPEN=1
+
+        # update the pin state byte, updating the interrupt
+        self.pin_state = self.BUS.read_byte_data(self.DEVICE_ADDRESS, self.REGISTER['GPIO'])
+
+        # copy new state to a variable that we can destructively shift; best approach? 
+        new_pin_state = self.pin_state
+
+        #log.debug ("Port.get_events() new pin state: %s" % (format(register, '08b')))
+
+        # This section has poor style. It needs a refactor. Create a list of events
+        # based on the pins that changed in the new and old pin byte
         CLOSED=0
         events = []
 
-
-        for x in range(0,self.MAXPINS):
-            if old_pin_state is None:
+        for x in range(0,8):
+            if old_pin_state is None:   
+                # when first started, consider state to have changed
                 pin_changed_value=True
             else:
-                pin_changed_value = self.xor(register&1, old_pin_state&1)
-                old_pin_state = old_pin_state >> 1   # don't use until next iteration
+                pin_changed_value = self.xor(old_pin_state&1, new_pin_state&1)
+
+                # This byte shift is here because--on first run when Nonetype--
+                # it won't try to shift here. Also, not used later in this function.
+                old_pin_state = old_pin_state >> 1   
 
             if pin_changed_value:
 
                 # set the new value
-                this_pin_value = register & 1
+                this_pin_value = new_pin_state & 1
                 pin_is_closed = (this_pin_value==CLOSED)
-                self.pins[x].set_closed(pin_is_closed)    
 
                 # since it changed, call it an event and add to the list
                 events.append([port_name+str(x),pin_is_closed])
 
-            # shift gpio on port right one bit in prep for next loop
-            register = register >> 1   
+
+            # new_pin_state is never Nonetype, unlike old_pin_state
+            new_pin_state = new_pin_state >> 1   
 
         return events
-
-
-    def print_self(self):
-        print ("port %s, status byte:%s" % (self.name, self.status_byte))
-        for x in range(0,self.MAXPINS):
-            self.pins[x].print_self()
-
 
 class MCP23017:
 
@@ -229,11 +177,6 @@ class MCP23017:
         # setup port B, 0xFF means that none of the ports have HW pull up resistors
         #self.portB = Port(self.bus, self.address, "GPB", self.REGISTER_MAPPING['B'], 0xFF)
         self.portB = Port(self.bus, self.address, "GPB", self.REGISTER_MAPPING['B'])
-
-    def print_self(self):
-        print ("chip 0x%s:" % format(self.address,'02x'))
-        self.portA.print_self();
-        self.portB.print_self();
 
     def get_events(self):
         """
