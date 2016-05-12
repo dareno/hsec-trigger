@@ -27,7 +27,13 @@ class PubChannel:
         self.publisher   = self.context.socket(zmq.PUB)
         self.publisher.bind(address)
 
-
+    def close(self):
+        """
+        Explicitly call this to clean up the connection
+        """
+        self.publisher.close()
+        self.context.term()
+    
     def send(self, channel, message):
         """
         Call like this:
@@ -67,10 +73,12 @@ class SubChannel:
         self.worker.setDaemon(True)
         self.worker.start()
     
-    
-        # clean up zmq connection
-        #subscriber.close()
-        #context.term()
+    def close(self):
+        """
+        Explicitly call this to clean up the connection
+        """
+        self.subscriber.close()
+        self.context.term()
     
     def recv_msg(self):
         """
