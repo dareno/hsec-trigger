@@ -8,6 +8,7 @@ import time
 import RPi.GPIO as GPIO     # for reading RaspPi pins
 from bus import Bus         # used for HW configuration
 import comms.comms as comms # encapsulates communication technology
+import datetime             # print time on log messages
 
 def configLogging():
     log = logging.getLogger('hsec')
@@ -72,7 +73,7 @@ def clean_exit():
     """
     Shut everything down cleanly before exit.
     """
-    print("CTRL-C detected, exiting...")
+    log.info("CTRL-C detected, exiting...")
     log = logging.getLogger('hsec')
     # ToDo: shutdown zmq 
     GPIO.cleanup()
@@ -93,7 +94,6 @@ def loop( chips ):
 
     # setup comms to share events to interested parties
     comm_channel = comms.PubChannel("tcp://*:5563")
-    #comm_channel = comms.comms.PubChannel()
     time.sleep(1) # zmq slow joiner syndrome, should sync instead
 
     # look for events, share them out
@@ -113,7 +113,7 @@ def loop( chips ):
             # share events with those interested
             if len(events)>0:
                 channel = "sensor_events"
-                print("sending %s" % events)
+                log.info("sending events %s" % events)
                 comm_channel.send(channel, events)
     
             # block until there's another event or timeout occurs
